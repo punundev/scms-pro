@@ -2,7 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\URL;
+use App\Models\Setting;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
@@ -14,6 +15,9 @@ class AppServiceProvider extends ServiceProvider
   public function boot(): void
   {
     Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
-    // git
+
+    if (app()->runningInConsole() === false && Schema::hasTable('settings')) {
+      view()->share('settings', Setting::all()->pluck('value', 'key'));
+    }
   }
 }

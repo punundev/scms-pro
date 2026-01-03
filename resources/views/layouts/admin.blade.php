@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="">
 
-  <head>
+  <s>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -23,7 +23,23 @@
     @stack('styles')
     @stack('style')
 
-  </head>
+    <style>
+      * {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      *::-webkit-scrollbar {
+        display: none;
+      }
+
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+
+  </s>
 
   <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 text-sm">
     <div id="sidebar-backdrop" class="sidebar-backdrop fixed inset-0 z-20 hidden opacity-0"></div>

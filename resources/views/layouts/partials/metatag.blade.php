@@ -1,5 +1,5 @@
 <!-- Primary Meta Tags -->
-<title>{{ config('app.name', 'SCMS') }} - @yield('title')</title>
+<title>{{ $settings['school_name'] ?? 'SCMS' }} - @yield('title')</title>
 <meta name="title" content="SCMS | Smart School Management System">
 <meta name="description"
   content="SCMS (School Management System) helps schools in Cambodia efficiently manage students, teachers, attendance, grades, and communication — all in one secure platform.">

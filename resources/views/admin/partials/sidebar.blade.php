@@ -244,6 +244,14 @@
                   {{ request()->routeIs('admin.roles.*') ? 'text-indigo-300 font-semibold bg-indigo-700 dark:bg-gray-700 text-white dark:text-indigo-400 rounded-lg px-3 mt-1' : '' }}">{{ __('message.roles') }}</a>
                 </li>
               @endif
+
+              @if (Auth::user()->hasPermissionTo('view_setting'))
+                <li>
+                  <a href="{{ route('admin.settings.index') }}"
+                    class="block py-2 hover:text-indigo-300 dark:hover:text-gray-300 capitalize
+                  {{ request()->routeIs('admin.settings.*') ? 'text-indigo-300 font-semibold bg-indigo-700 dark:bg-gray-700 text-white dark:text-indigo-400 rounded-lg px-3 mt-1' : '' }}">{{ __('message.settings') }}</a>
+                </li>
+              @endif
           </div>
         </li>
       @endif

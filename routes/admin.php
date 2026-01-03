@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -151,7 +152,8 @@ Route::prefix('admin')
     Route::post('/fees/{fee}/pay', [FeeController::class, 'paid'])
       ->name('fees.pay');
 
-
+    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
 
 
 

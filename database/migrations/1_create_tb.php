@@ -253,6 +253,7 @@ return new class extends Migration
 
   public function down(): void
   {
+    Schema::dropIfExists('settings');
     Schema::dropIfExists('notifications');
     Schema::dropIfExists('scores');
     Schema::dropIfExists('payments');
