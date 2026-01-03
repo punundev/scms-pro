@@ -33,30 +33,11 @@ class StudentController extends BaseController
     return 'Student';
   }
 
-  // public function index(Request $request)
-  // {
-  //   $studentRole = Role::where('name', 'student')->first();
 
-  //   if (!$studentRole) {
-  //     $students = User::where('id', 0);
-  //     return view('admin.students.index', ['students' => $students->paginate(6)]);
-  //   }
 
-  //   $query = User::role('student')
-  //     ->orderBy('created_at', 'desc')
-  //     ->withCount(['fees', 'attendances', 'courseOfferings']);
 
-  //   if ($search = $request->input('search')) {
-  //     $query->where(function ($q) use ($search) {
-  //       $q->where('name', 'like', '%' . $search . '%')
-  //         ->orWhere('email', 'like', '%' . $search . '%');
-  //     });
-  //   }
 
-  //   $students = $query->paginate(6);
 
-  //   return view('admin.students.index', compact('students'));
-  // }
 
 
   public function index(Request $request)

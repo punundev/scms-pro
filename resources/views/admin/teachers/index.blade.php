@@ -1,526 +1,191 @@
 @extends('layouts.admin')
-@section('title', 'Teachers')
+
+@section('title', 'Teachers List')
 @section('content')
-    <x-page.index :btnCreate="true" btn-text="Create New Teacher" :showReset="true" :showViewToggle="true" title="Teacher"
-        iconSvgPath="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z">
-        <div id="TableContainer" class="table-respone overflow-x-auto h-[60vh]">
-            @include('admin.teachers.partials.table', ['teachers' => $teachers])
-        </div>
-        <div id="CardContainer" class="hidden my-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            @include('admin.teachers.partials.cardlist', ['teachers' => $teachers])
-        </div>
-        <x-table.pagination :paginator="$teachers" />
-    </x-page.index>
 
-    @include('admin.teachers.partials.create')
-    @include('admin.teachers.partials.edit')
-    @include('admin.teachers.partials.detail')
-    @include('admin.teachers.partials.bulkedit')
-    @include('admin.teachers.partials.bulkdelete')
-    <x-modal.confirmdelete title="Teacher" />
+  <div
+    class="box px-2 py-4 md:p-4 bg-white dark:bg-gray-800 sm:rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm mb-10">
 
+    <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+      <div
+        class="size-10 p-2 flex justify-center items-center rounded-full bg-indigo-50 text-indigo-600 border border-indigo-300 dark:border-indigo-800 dark:text-indigo-50 dark:bg-slate-800">
+        <i class="ri-teacher-fill text-2xl"></i>
+      </div>
+      Teachers List
+    </h3>
+
+    @if (session('success'))
+      <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ session('success') }}</span>
+      </div>
+    @endif
+    @if (session('error'))
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ session('error') }}</span>
+      </div>
+    @endif
+
+    <form action="{{ route('admin.teachers.index') }}" method="GET">
+      <div
+        class="p-2 md:flex gap-2 justify-between items-center border rounded-lg border-gray-200 dark:border-gray-700 bg-indigo-50 dark:bg-slate-800">
+
+        @if (Auth::user()->hasPermissionTo('create_teacher'))
+          <a href="{{ route('admin.teachers.create') }}"
+            class="text-nowrap px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 cursor-pointer transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-plus me-2"></i>
+            Add New Teacher
+          </a>
+        @endif
+
+        <div class="flex items-center mt-3 md:mt-0 gap-2 min-w-2/3">
+          <div class="relative w-full">
+            <input type="search" name="search" id="searchInput" placeholder="Search by name, email, or specialty..."
+              class="w-full border border-gray-300 dark:border-gray-500 dark:bg-gray-700 text-sm rounded-lg pl-8 pr-2 py-1.5
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-100"
+              value="{{ request('search') }}">
+            <i class="fas fa-search absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
+          </div>
+
+          <button type="submit"
+            class="p-2 h-8 w-8 flex items-center justify-center cursor-pointer bg-indigo-600 dark:bg-indigo-700 hover:bg-indigo-700 dark:hover:bg-indigo-600 rounded-lg transition-colors text-white"
+            title="Search">
+            <i class="fas fa-search text-white text-xs"></i>
+          </button>
+          <a href="{{ route('admin.teachers.index') }}"
+            class="p-2 h-8 w-8 flex items-center justify-center cursor-pointer bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors dark:text-white"
+            title="Reset Search">
+            <i class="fa-solid fa-arrow-rotate-right"></i>
+          </a>
+        </div>
+      </div>
+    </form>
+
+    {{-- START: Card View for Teachers --}}
+    <div id="CardContainer" class="my-5 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
+      @forelse ($teachers as $teacher)
+        <div
+          class="bg-white dark:bg-slate-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+
+          {{-- Card Header --}}
+          <div
+            class="px-4 py-2 bg-slate-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <img src="{{ asset($teacher->avatar ?? 'defaults/avatar.png') }}"
+                class="w-14 h-14 rounded-full object-cover border-2 border-white shadow">
+              <div>
+                <a href="{{ route('admin.teachers.show', $teacher->id) }}"
+                  class="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize hover:text-indigo-600 dark:hover:text-indigo-400">
+                  {{ $teacher->name }}
+                </a>
+                <p class="text-xs text-indigo-500 font-medium">{{ $teacher->specialization ?? 'No Specialization' }}</p>
+              </div>
+            </div>
+          </div>
+
+          {{-- Card Body --}}
+          <div class="p-4 space-y-3">
+            {{-- Email --}}
+            <div class="flex items-center gap-3 text-sm">
+              <div class="p-2 rounded-lg bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300">
+                <i class="fa-solid fa-at size-5 text-center"></i>
+              </div>
+              <div class="truncate">
+                <p class="text-xs text-gray-500 dark:text-gray-400">Email Address</p>
+                <p class="font-medium text-gray-700 dark:text-gray-200 truncate" title="{{ $teacher->email }}">
+                  {{ $teacher->email }}
+                </p>
+              </div>
+            </div>
+
+            {{-- Phone --}}
+            <div class="flex items-center gap-3 text-sm">
+              <div class="p-2 rounded-lg bg-green-50 dark:bg-slate-700 text-green-600 dark:text-green-300">
+                <i class="fa-solid fa-phone size-5 text-center"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Phone</p>
+                <p class="font-medium text-gray-700 dark:text-gray-200">{{ $teacher->phone ?? 'N/A' }}</p>
+              </div>
+            </div>
+
+            {{-- Salary & Joining Date --}}
+            <div class="grid grid-cols-2 gap-2">
+              <div class="flex items-center gap-3 text-sm">
+                <div class="p-2 rounded-lg bg-yellow-50 dark:bg-slate-700 text-yellow-600 dark:text-yellow-300">
+                  <i class="fa-solid fa-money-bill-wave size-5 text-center"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Salary</p>
+                  <p class="font-medium text-gray-700 dark:text-gray-200">${{ number_format($teacher->salary, 2) }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 text-sm">
+                <div class="p-2 rounded-lg bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-300">
+                  <i class="fa-solid fa-calendar-check size-5 text-center"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Joined</p>
+                  <p class="font-medium text-gray-700 dark:text-gray-200">
+                    {{ $teacher->joining_date ? \Carbon\Carbon::parse($teacher->joining_date)->format('M d, Y') : 'N/A' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Card Footer --}}
+          <div
+            class="px-4 py-2 bg-gray-50 dark:bg-slate-700/50 border-t border-gray-100 dark:border-slate-700 flex justify-between items-center">
+
+            <div class="flex gap-2">
+              @if ($teacher->cv)
+                <a href="{{ asset($teacher->cv) }}" target="_blank"
+                  class="text-xs bg-white dark:bg-slate-600 border border-gray-200 dark:border-slate-500 px-2 py-1 rounded text-gray-600 dark:text-gray-200 hover:bg-gray-50">
+                  <i class="fa-solid fa-file-pdf me-1 text-red-500"></i> CV
+                </a>
+              @endif
+            </div>
+
+            <div class="flex items-center gap-1">
+              <a href="{{ route('admin.teachers.show', $teacher->id) }}"
+                class="p-2 rounded-full text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors"
+                title="View Details">
+                <i class="fa-regular fa-eye"></i>
+              </a>
+
+              @if (Auth::user()->hasPermissionTo('update_teacher'))
+                <a href="{{ route('admin.teachers.edit', $teacher->id) }}"
+                  class="p-2 rounded-full text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-slate-600 transition-colors"
+                  title="Edit Teacher">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </a>
+              @endif
+
+              @if (Auth::user()->hasPermissionTo('delete_teacher'))
+                <form action="{{ route('admin.teachers.destroy', $teacher->id) }}" method="POST"
+                  onsubmit="return confirm('Delete teacher {{ $teacher->name }}?');" class="inline">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit"
+                    class="p-2 rounded-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-slate-600 transition-colors">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </form>
+              @endif
+            </div>
+          </div>
+        </div>
+      @empty
+        <div class="col-span-full py-12 text-center">
+          <p class="text-gray-500 dark:text-gray-400">No teachers found.</p>
+        </div>
+      @endforelse
+    </div>
+
+    <div class="mt-6">
+      {{ $teachers->links('admin.components.tailwind-modern') }}
+    </div>
+
+  </div>
 @endsection
-
-@push('scripts')
-    <script src="{{ asset('assets/js/modal.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Core Configuration
-            $.ajaxSetup({
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            // DOM Elements
-            const backdrop = document.getElementById('modalBackdrop');
-            const searchInput = $('#searchInput');
-            const resetSearch = $('#resetSearch');
-            const listViewBtn = $('#listViewBtn');
-            const cardViewBtn = $('#cardViewBtn');
-            const tableContainer = $('#TableContainer');
-            const cardContainer = $('#CardContainer');
-
-            // Search input handler - fixed
-            searchInput.on('input', debounce(function() {
-                const query = $(this).val().toLowerCase();
-                searchData(query);
-            }, 500));
-
-            // Per page select handler - fixed
-            $('#perPageSelect').on('change', function() {
-                const perPage = $(this).val();
-                searchData(searchInput.val().toLowerCase(), perPage);
-            });
-
-            // Reset search handler
-            resetSearch.on('click', function() {
-                searchInput.val('');
-                searchData('');
-            });
-
-            // Create modal handler
-            $('#openCreateModal').on('click', function() {
-                showModal('Modalcreate');
-            });
-
-            // Bulk edit modal close handler
-            $('#closeBulkEditModal, #cancelBulkEditModal').on('click', function() {
-                closeModal('bulkEditModal');
-            });
-
-            // View Management
-            function setView(viewType) {
-                if (viewType === 'list') {
-                    listViewBtn.addClass('bg-indigo-100 dark:bg-indigo-700').removeClass(
-                        'bg-gray-100 dark:bg-gray-700');
-                    cardViewBtn.addClass('bg-gray-100 dark:bg-gray-700').removeClass(
-                        'bg-indigo-100 dark:bg-indigo-700');
-                    tableContainer.removeClass('hidden');
-                    cardContainer.addClass('hidden');
-                } else {
-                    cardViewBtn.addClass('bg-indigo-100 dark:bg-indigo-700').removeClass(
-                        'bg-gray-100 dark:bg-gray-700');
-                    listViewBtn.addClass('bg-gray-100 dark:bg-gray-700').removeClass(
-                        'bg-indigo-100 dark:bg-indigo-700');
-                    tableContainer.addClass('hidden');
-                    cardContainer.removeClass('hidden');
-                }
-                localStorage.setItem('viewitem', viewType);
-            }
-
-            // Search and Pagination
-            function searchData(searchTerm = '', perPage = null) {
-                const currentPerPage = perPage || $('#perPageSelect').val() || 8;
-                const currentView = localStorage.getItem('viewitem') || 'list';
-
-                $.ajax({
-                    url: "{{ route('admin.teachers.index') }}",
-                    method: 'GET',
-                    data: {
-                        search: searchTerm,
-                        per_page: currentPerPage,
-                        view: currentView
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            tableContainer.html(response.html.table);
-                            cardContainer.html(response.html.cards);
-                            if (response.html.pagination) {
-                                $('.pagination').html(response.html.pagination);
-                            } else {
-                                $('.pagination').html(''); // Clear pagination if no items
-                            }
-                            attachRowEventHandlers();
-                        } else {
-                            ShowTaskMessage('error', 'Failed to load data');
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Search failed:', xhr.responseText);
-                        ShowTaskMessage('error', 'Failed to load data');
-                    }
-                });
-            }
-
-            function refreshContent() {
-                const currentView = localStorage.getItem('viewitem') || 'list';
-                const searchTerm = searchInput.val().toLowerCase() || '';
-                const perPage = $('#perPageSelect').val() || 8; // Fixed: use selector directly
-
-                $.ajax({
-                    url: "{{ route('admin.teachers.index') }}",
-                    method: 'GET',
-                    data: {
-                        search: searchTerm,
-                        view: currentView,
-                        per_page: perPage
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            tableContainer.html(response.html.table);
-                            cardContainer.html(response.html.cards);
-                            if (response.html.pagination) {
-                                $('.pagination').html(response.html.pagination);
-                            }
-                            attachRowEventHandlers();
-                        } else {
-                            ShowTaskMessage('error', 'Failed to refresh data');
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Refresh failed:', xhr.responseText);
-                        ShowTaskMessage('error', 'Failed to refresh data');
-                    }
-                });
-            }
-
-            // AJAX pagination
-            $(document).on('click', '.pagination-link:not(.disabled)', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                const perPage = $('#perPageSelect').val() || 8;
-                const searchTerm = searchInput.val().toLowerCase() || '';
-                const currentView = localStorage.getItem('viewitem') || 'list';
-
-                $.ajax({
-                    url: "{{ route('admin.teachers.index') }}",
-                    method: 'GET',
-                    data: {
-                        page: page,
-                        per_page: perPage,
-                        search: searchTerm,
-                        view: currentView
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            tableContainer.html(response.html.table);
-                            cardContainer.html(response.html.cards);
-                            if (response.html.pagination) {
-                                $('.pagination').html(response.html.pagination);
-                            }
-                            attachRowEventHandlers();
-                        } else {
-                            ShowTaskMessage('error', 'Failed to load page');
-                        }
-                    },
-                    error: function(xhr) {
-                        ShowTaskMessage('error', 'Error loading page');
-                    }
-                });
-            });
-
-            function handleCreateSubmit(e) {
-                e.preventDefault();
-                const form = $(this);
-                if (!this.checkValidity()) {
-                    $(this).addClass('was-validated');
-                    return;
-                }
-                $(this).removeClass('was-validated');
-                const submitBtn = $('#createSubmitBtn');
-                const originalBtnHtml = submitBtn.html();
-                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Saving...');
-                // Create FormData object for file uploads
-                const formData = new FormData(form[0]);
-                $.ajax({
-                    url: form.attr('action'),
-                    method: 'POST',
-                    processData: false,
-                    contentType: false,
-                    data: formData,
-                    success: function(response) {
-                        if (response.success) {
-                            closeModal('Modalcreate');
-                            ShowTaskMessage('success', response.message);
-                            form.trigger('reset');
-                            refreshContent();
-                            // Reset preview
-                            $('#photoPreview').addClass('hidden');
-                            $('#dropArea').removeClass('hidden');
-                            // Reset CV preview
-                            $('#cvFileName').addClass('hidden');
-                            $('#removeCv').addClass('hidden');
-                            $('#cvDropArea').removeClass('hidden');
-                            $('#cvPreview').addClass('hidden');
-                        } else {
-                            ShowTaskMessage('error', response.message || 'Error creating teacher');
-                        }
-                        $('.error-remove').text('');
-                    },
-                    error: function(xhr) {
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON.errors;
-
-                            // Clear all error messages first
-                            $('.error-remove').text('');
-                            // Show new error messages
-                            for (const field in errors) {
-                                if (errors.hasOwnProperty(field)) {
-                                    $(`#error-${field}`).text(errors[field][0]);
-                                }
-                            }
-
-                            ShowTaskMessage('error', 'Invalid field. Something went wrong!');
-                        } else {
-                            ShowTaskMessage('error', 'Server error occurred!');
-                        }
-                    },
-                    complete: function() {
-                        submitBtn.prop('disabled', false).html(originalBtnHtml);
-                        form.removeClass('was-validated');
-                    }
-                });
-            }
-
-            function handleEditClick(e) {
-                e.preventDefault();
-                const editBtn = $(this);
-                const originalContent = editBtn.html();
-                editBtn.html('<i class="fas fa-spinner fa-spin"></i><span class="ml-2 textnone">Loading...</span>')
-                    .prop('disabled', true);
-
-                const Id = $(this).data('id');
-                $('.error-remove').text('');
-                $.get(`/admin/teachers/${Id}`)
-                    .done(function(response) {
-                        if (response.success && response.teacher) {
-                            const teacher = response.teacher;
-                            const date = teacher.joining_date ? teacher.joining_date.substring(0, 10) : '';
-                            const datedob = teacher.date_of_birth ? teacher.date_of_birth.substring(0, 10) : '';
-                            // Set form values
-                            console.log(teacher)
-                            $('#edit_name').val(teacher.name);
-                            $('#edit_user').val(teacher.user_id);
-                            $('#edit_phone').val(teacher.phone);
-                            $('#edit_email').val(teacher.email);
-                            $('#edit_gender').val(teacher.gender);
-                            $('#edit_date_of_birth').val(datedob);
-                            $('#edit_teacher_id').val(teacher.teacher_id);
-                            // $('#edit_depid').val(teacher.department_id);
-                            $('#edit_joining_date').val(date);
-                            $('#edit_qualification').val(teacher.qualification);
-                            $('#edit_specialization').val(teacher.specialization);
-                            $('#edit_salary').val(teacher.salary);
-                            $('#edit_address').val(teacher.address);
-                            $('#edit_experience').val(teacher.experience);
-                            // Handle display
-                            if (teacher.avatar) {
-                                $('#edit_avatar').attr('src', '/' + teacher.avatar).removeClass('hidden');
-                                $('#edit_initials').addClass('hidden');
-                            } else {
-                                $('#edit_avatar').addClass('hidden');
-                                const initials = teacher.name.split(' ').map(n => n[0]).join('').toUpperCase();
-                                $('#edit_initials').removeClass('hidden').find('span').text(initials);
-                                $('#edit_avatar').removeClass('hidden');
-                            }
-                            // Handle CV display
-                            if (teacher.cv) {
-                                $('#current_cv').removeClass('hidden');
-                                $('#cv_link').attr('href', '/storage/' + teacher.cv).text(teacher.cv.split('/')
-                                    .pop());
-                            } else {
-                                $('#current_cv').addClass('hidden');
-                            }
-                            // Set form action
-                            $('#Formedit').attr('action', `/teachers/${Id}`);
-                            showModal('Modaledit');
-                        } else {
-                            ShowTaskMessage('error', response.message || 'Failed to load teacher data');
-                        }
-                    })
-                    .fail(function(xhr) {
-                        console.error('Error:', xhr.responseText);
-                        ShowTaskMessage('error', 'Failed to load teacher data');
-                    })
-                    .always(function() {
-                        editBtn.html(originalContent).prop('disabled', false);
-                    });
-            }
-
-            function handleEditSubmit(e) {
-                e.preventDefault();
-                const form = $(this);
-                const submitBtn = $('#saveEditBtn');
-                const originalBtnHtml = submitBtn.html();
-                if (!this.checkValidity()) {
-                    $(this).addClass('was-validated');
-                    return;
-                }
-                $(this).removeClass('was-validated');
-                const formData = new FormData(form[0]);
-                formData.append('_method', 'PUT');
-                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Saving...');
-                $.ajax({
-                    url: '/admin' + form.attr('action'),
-                    method: 'POST',
-                    data: formData,
-                    processData: false, // Important for file uploads
-                    contentType: false, // Important for file uploads
-                    success: function(response) {
-                        if (response.success) {
-                            closeModal('Modaledit');
-                            ShowTaskMessage('success', response.message);
-                            refreshContent();
-                            form.trigger('reset');
-                        } else {
-                            ShowTaskMessage('error', response.message || 'Error updating teacher');
-                        }
-                    },
-                    error: function(xhr) {
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON.errors;
-                            for (const field in errors) {
-                                if (errors.hasOwnProperty(field)) {
-                                    const errorMessage = errors[field][0];
-                                    $(`#edit-error-${field}`).text(errorMessage);
-                                }
-                            }
-                            let errorMessages = Object.values(errors).flat().join('\n');
-                            ShowTaskMessage('error', errorMessages || 'Error updating teacher');
-                        }
-                    },
-                    complete: function() {
-                        submitBtn.prop('disabled', false).html(originalBtnHtml);
-                        form.removeClass('was-validated');
-                    }
-                });
-            }
-
-            function handleDeleteClick(e) {
-                e.preventDefault();
-                const Id = $(this).data('id');
-                $('#Formdelete').attr('action', `/teachers/${Id}`);
-                showModal('Modaldelete');
-            }
-
-            function handleDeleteSubmit(e) {
-                e.preventDefault();
-                const form = $(this);
-                const submitBtn = $('#confirmDeleteBtn');
-                const originalBtnHtml = submitBtn.html();
-
-                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Deleting...');
-
-                $.ajax({
-                    url: '/admin' + form.attr('action'),
-                    method: 'POST',
-                    data: {
-                        _method: 'DELETE'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            closeModal('Modaldelete');
-                            ShowTaskMessage('success', response.message);
-                            refreshContent();
-                        } else {
-                            ShowTaskMessage('error', response.message || 'Error deleting teacher');
-                        }
-                    },
-                    error: function(xhr) {
-                        ShowTaskMessage('error', xhr.responseJSON?.message || 'Error deleting teacher');
-                    },
-                    complete: function() {
-                        submitBtn.prop('disabled', false).html(originalBtnHtml);
-                    }
-                });
-            }
-
-            function handleDetailClick(e) {
-                e.preventDefault();
-                const detailBtn = $(this);
-                const originalContent = detailBtn.find('.btn-content').html();
-                detailBtn.find('.btn-content').html('<i class="fas fa-spinner fa-spin mr-2"></i> Loading...');
-                detailBtn.prop('disabled', true);
-
-                const Id = $(this).data('id');
-
-                $.get(`/admin/teachers/${Id}`)
-                    .done(function(response) {
-                        if (response.success) {
-                            const teach = response.teacher;
-                            // const departmentName = teach.department?.name ?? "Unknown";
-                            const updatedAt = teach.updated_at ? teach.updated_at.substring(0, 10) : '';
-                            // Set basic info
-                            $('#detail_name').text(teach.name ?? '');
-                            $('.title').text(teach.name ?? '');
-                            $('#detail_user').val(teach.user_id);
-                            $('#detail_gender').val(teach.gender);
-                            $('#detail_salary').text(teach.salary);
-                            // $('#detail_department').text(departmentName).toggleClass('hidden', !departmentName);
-                            $('#detail_specialization').text(teach.specialization ?? '');
-                            $('#detail_experience').text(teach.experience ?? '0');
-                            $('#detail_qualification').text(teach.qualification ?? '');
-                            $('#detail_joining_date').text(teach.joining_date ? new Date(teach.joining_date)
-                                .toLocaleDateString() : '');
-                            $('#detail_email').text(teach.email ?? '');
-                            $('#detail_phone').text(teach.phone ?? 'Not provided');
-                            $('#detail_date_of_birth').text(teach.date_of_birth ? new Date(teach.date_of_birth)
-                                .toLocaleDateString() :
-                                '');
-                            $('#detail_address').text(teach.address ?? '');
-
-                            // Handle display
-                            const avatarContainer = $('#detail_avatar');
-                            const initialsContainer = $('#detail_initials');
-                            const initialsSpan = initialsContainer.find('span');
-
-                            if (teach.avatar) {
-                                avatarContainer.attr('src', `${window.location.origin}/${teach.avatar}`)
-                                    .removeClass('hidden');
-                                initialsContainer.addClass('hidden');
-                            } else {
-                                // Display initials if no avatar
-                                avatarContainer.addClass('hidden');
-                                initialsContainer.removeClass('hidden');
-                                const nameParts = teach.name.split(' ');
-                                const initials = nameParts.map(part => part[0]).join('').toUpperCase();
-                                initialsSpan.text(initials);
-                            }
-
-                            // Handle CV preview
-                            if (teach.cv) {
-                                const cvPath = teach.cv.startsWith('http') ? teach.cv : `/${teach.cv}`;
-                                const fileName = teach.cv.split('/').pop();
-                                $('#cv_preview_container').removeClass('hidden');
-                                $('#no_cv_message').addClass('hidden');
-                                $('#cv_filename').text(fileName);
-                                $('#cv_download_btn').attr('href', cvPath);
-
-                                // Make the whole container clickable to view
-                                $('#cv_preview_container').off('click').on('click', function() {
-                                    window.open(cvPath, '_blank');
-                                });
-                            } else {
-                                $('#cv_preview_container').addClass('hidden');
-                                $('#no_cv_message').removeClass('hidden');
-                            }
-                            showModal('Modaldetail');
-                        } else {
-                            ShowTaskMessage('error', response.message || 'Failed to load teacher details');
-                        }
-                    })
-                    .fail(function(xhr) {
-                        console.error('Error:', xhr.responseText);
-                        ShowTaskMessage('error', 'Failed to load teacher details');
-                    })
-                    .always(function() {
-                        detailBtn.find('.btn-content').html(originalContent);
-                        detailBtn.prop('disabled', false);
-                    });
-            }
-
-            function attachRowEventHandlers() {
-                $('.edit-btn').off('click').on('click', handleEditClick);
-                $('.delete-btn').off('click').on('click', handleDeleteClick);
-                $('.detail-btn').off('click').on('click', handleDetailClick);
-            }
-
-            function debounce(func, wait = 500) {
-                let timeout;
-                return function(...args) {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(this, args), wait);
-                };
-            }
-            // Event Listeners
-            function initialize() {
-                // Set initial view
-                const savedView = localStorage.getItem('viewitem') || 'list';
-                setView(savedView);
-                // View toggle
-                listViewBtn.on('click', () => setView('list'));
-                cardViewBtn.on('click', () => setView('card'));
-                // Search (already set up above)
-                // Form submissions
-                $('#Modalcreate form').off('submit').on('submit', handleCreateSubmit);
-                $('#Formedit').off('submit').on('submit', handleEditSubmit);
-                $('#Formdelete').off('submit').on('submit', handleDeleteSubmit);
-                // Attach initial event handlers
-                attachRowEventHandlers();
-            }
-            // Start the application
-            initialize();
-        });
-    </script>
-@endpush

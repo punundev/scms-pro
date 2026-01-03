@@ -38,7 +38,6 @@ return new class extends Migration
       $table->text('specialization')->nullable();
       $table->decimal('salary', 10, 2)->nullable();
       $table->string('cv')->nullable();
-      $table->string('blood_group')->nullable();
       $table->string('nationality')->nullable();
       $table->string('religion')->nullable();
       $table->date('admission_date')->nullable();

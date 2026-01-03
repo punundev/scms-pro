@@ -12,10 +12,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class TeacherController extends BaseController
 {
-
   public function __construct()
   {
     parent::__construct();
@@ -26,168 +26,120 @@ class TeacherController extends BaseController
   {
     return 'Teacher';
   }
+
   public function index(Request $request)
   {
     $search = $request->input('search');
     $perPage = $request->input('per_page', 10);
-    $viewType = $request->input('view', 'table');
-    $teachers = User::role('teacher')
 
+    $teachers = User::role('teacher')
       ->when($search, function ($query) use ($search) {
-        return $query->where('name', 'like', "%{$search}%")
-          ->orWhere('email', 'like', "%{$search}%")
-          ->orWhere('qualification', 'like', "%{$search}%")
-          ->orWhere('specialization', 'like', "%{$search}%")
-          ->orWhere('joining_date', 'like', "%{$search}%")
-          ->orWhere('salary', 'like', "%{$search}%")
-          ->orWhere('phone', 'like', "%{$search}%");
+        return $query->where(function ($q) use ($search) {
+          $q->where('name', 'like', "%{$search}%")
+            ->orWhere('email', 'like', "%{$search}%")
+            ->orWhere('phone', 'like', "%{$search}%")
+            ->orWhere('specialization', 'like', "%{$search}%");
+        });
       })
       ->orderBy('created_at', 'desc')
       ->paginate($perPage)
-      ->appends([
-        'search' => $search,
-        'per_page' => $perPage,
-        'view' => $viewType
-      ]);
-
-    if ($request->ajax()) {
-      $html = [
-        'table' => view('admin.teachers.partials.table', compact('teachers'))->render(),
-        'cards' => view('admin.teachers.partials.cardlist', compact('teachers'))->render(),
-        'pagination' => $teachers->links()->toHtml()
-      ];
-
-      return response()->json([
-        'success' => true,
-        'html' => $html,
-        'view' => $viewType
-      ]);
-    }
+      ->appends(['search' => $search, 'per_page' => $perPage]);
 
     return view('admin.teachers.index', compact('teachers'));
   }
 
+  public function create()
+  {
+    return view('admin.teachers.create');
+  }
+
   public function store(StoreTeacherRequest $request)
   {
+    DB::beginTransaction();
     try {
-      Log::info('Store Teacher Request Data:', $request->all());
-
       $validated = $request->validated();
-      Log::info('Validated Data:', $validated);
 
-      $category = ExpenseCategory::firstOrCreate(
+      ExpenseCategory::firstOrCreate(
         ['name' => 'Payroll'],
         ['description' => 'Automatically generated fee category for payroll teachers.']
       );
 
-      // Handle photo upload
-      $teacherPhotoPath = public_path('uploads/teacher');
-      if (!file_exists($teacherPhotoPath)) {
-        mkdir($teacherPhotoPath, 0755, true);
-      }
-
       if ($request->hasFile('avatar')) {
         $avatar = $request->file('avatar');
-        $photoName = time() . '-' . date('d-m-Y') . '_add_' . $avatar->getClientOriginalName();
-        $avatar->move($teacherPhotoPath, $photoName);
+        $photoName = time() . '_at_' . $avatar->getClientOriginalName();
+        $avatar->move(public_path('uploads/teacher'), $photoName);
         $validated['avatar'] = 'uploads/teacher/' . $photoName;
-      }
-      // Handle CV upload
-      $cvPath = public_path('uploads/cv');
-      if (!file_exists($cvPath)) {
-        mkdir($cvPath, 0755, true);
       }
 
       if ($request->hasFile('cv')) {
         $cv = $request->file('cv');
-        $cvName = time() . '-' . date('d-m-Y') . '_add_' . $cv->getClientOriginalName();
-        $cv->move($cvPath, $cvName);
+        $cvName = time() . '_cv_' . $cv->getClientOriginalName();
+        $cv->move(public_path('uploads/cv'), $cvName);
         $validated['cv'] = 'uploads/cv/' . $cvName;
       }
 
-      // Set default password if not provided
-      if (!isset($validated['password']) || empty($validated['password'])) {
-        $validated['password'] = 'password'; // Default password
-      }
-      $validated['password'] = Hash::make($validated['password']);
+      $validated['password'] = Hash::make($request->input('password', 'password'));
 
-      // Create user
       $teacher = User::create($validated);
       $teacher->assignRole('teacher');
 
-      return response()->json([
-        'success' => true,
-        'message' => 'Teacher created successfully 🎅!',
-        'teacher' => $teacher
-      ]);
+      DB::commit();
+      return redirect()->route('admin.teachers.index')
+        ->with('success', 'Teacher created successfully 🎅!');
     } catch (\Exception $e) {
+      DB::rollBack();
       Log::error('Teacher Store Error: ' . $e->getMessage());
-      Log::error('Stack Trace: ' . $e->getTraceAsString());
-
-      return response()->json([
-        'success' => false,
-        'message' => 'Error creating teacher: ' . $e->getMessage()
-      ], 500);
+      return back()->withInput()->with('error', 'Error creating teacher: ' . $e->getMessage());
     }
   }
 
   public function show(User $teacher)
   {
-    // Ensure we're only showing teachers
     if (!$teacher->hasRole('teacher')) {
-      return response()->json([
-        'success' => false,
-        'message' => 'User is not a teacher'
-      ], 404);
+      abort(404);
     }
-    return response()->json([
-      'success' => true,
-      'teacher' => $teacher
-    ]);
+    return view('admin.teachers.show', compact('teacher'));
+  }
+
+  public function edit(User $teacher)
+  {
+    if (!$teacher->hasRole('teacher')) {
+      abort(404);
+    }
+    return view('admin.teachers.edit', compact('teacher'));
   }
 
   public function update(UpdateTeacherRequest $request, User $teacher)
   {
-    try {
-      // Ensure we're only updating teachers
-      if (!$teacher->hasRole('teacher')) {
-        return response()->json([
-          'success' => false,
-          'message' => 'User is not a teacher'
-        ], 404);
-      }
+    if (!$teacher->hasRole('teacher')) {
+      return redirect()->route('admin.teachers.index')->with('error', 'User is not a teacher');
+    }
 
+    DB::beginTransaction();
+    try {
       $data = $request->validated();
 
-      // Handle photo upload
       if ($request->hasFile('avatar')) {
-        // Delete old photo if exists
         if ($teacher->avatar && file_exists(public_path($teacher->avatar))) {
           unlink(public_path($teacher->avatar));
         }
-
         $avatar = $request->file('avatar');
-        $photoName = time() . '-' . date('d-m-Y') . '_ed_' . $avatar->getClientOriginalName();
-        $photoPath = public_path('uploads/teacher');
-        $avatar->move($photoPath, $photoName);
+        $photoName = time() . '_ed_' . $avatar->getClientOriginalName();
+        $avatar->move(public_path('uploads/teacher'), $photoName);
         $data['avatar'] = 'uploads/teacher/' . $photoName;
       }
 
-      // Handle CV upload
       if ($request->hasFile('cv')) {
-        // Delete old CV if exists
         if ($teacher->cv && file_exists(public_path($teacher->cv))) {
           unlink(public_path($teacher->cv));
         }
         $cv = $request->file('cv');
-        $cvName = time() . '-' . date('d-m-Y') . '_ed_' . $cv->getClientOriginalName();
-        $cvPath = public_path('uploads/cv');
-        $cv->move($cvPath, $cvName);
+        $cvName = time() . '_ed_cv_' . $cv->getClientOriginalName();
+        $cv->move(public_path('uploads/cv'), $cvName);
         $data['cv'] = 'uploads/cv/' . $cvName;
       }
 
-      // Update password if provided
-      if (isset($data['password']) && !empty($data['password'])) {
+      if (!empty($data['password'])) {
         $data['password'] = Hash::make($data['password']);
       } else {
         unset($data['password']);
@@ -195,183 +147,54 @@ class TeacherController extends BaseController
 
       $teacher->update($data);
 
-      return response()->json([
-        'success' => true,
-        'message' => 'Teacher updated successfully 🎅',
-        'teacher' => $teacher
-      ]);
+      DB::commit();
+      return redirect()->route('admin.teachers.index')
+        ->with('success', 'Teacher updated successfully 🎅');
     } catch (\Exception $e) {
+      DB::rollBack();
       Log::error('Teacher Update Error: ' . $e->getMessage());
-      return response()->json([
-        'success' => false,
-        'message' => 'Error updating teacher: ' . $e->getMessage()
-      ], 500);
+      return back()->withInput()->with('error', 'Error updating teacher');
     }
   }
 
   public function destroy(User $teacher)
   {
-    try {
-      // Ensure we're only deleting teachers
-      if (!$teacher->hasRole('teacher')) {
-        return response()->json([
-          'success' => false,
-          'message' => 'User is not a teacher'
-        ], 404);
-      }
-
-      // Delete associated files
-      if ($teacher->avatar) {
-        $photoPath = public_path($teacher->avatar);
-        if (file_exists($photoPath)) {
-          unlink($photoPath);
-        }
-      }
-      if ($teacher->cv) {
-        $cvPath = public_path($teacher->cv);
-        if (file_exists($cvPath)) {
-          unlink($cvPath);
-        }
-      }
-
-      $teacher->delete();
-
-      return response()->json([
-        'success' => true,
-        'message' => 'Teacher deleted successfully'
-      ]);
-    } catch (\Exception $e) {
-      return response()->json([
-        'success' => false,
-        'message' => 'Error deleting teacher: ' . $e->getMessage()
-      ], 500);
+    if (!$teacher->hasRole('teacher')) {
+      return back()->with('error', 'User is not a teacher');
     }
+
+    if ($teacher->avatar && file_exists(public_path($teacher->avatar))) {
+      unlink(public_path($teacher->avatar));
+    }
+
+    if ($teacher->cv && file_exists(public_path($teacher->cv))) {
+      unlink(public_path($teacher->cv));
+    }
+
+    $teacher->delete();
+
+    return redirect()->route('admin.teachers.index')
+      ->with('success', 'Teacher deleted successfully');
   }
 
   public function bulkDelete(Request $request)
   {
     $ids = $request->input('ids');
-
     if (empty($ids)) {
-      return response()->json([
-        'success' => false,
-        'message' => 'No teachers selected'
-      ], 400);
+      return back()->with('error', 'No teachers selected');
     }
 
-    try {
-      $teachers = User::role('teacher')->whereIn('id', $ids)->get();
-
-      foreach ($teachers as $teacher) {
-        // Delete associated files
-        if ($teacher->avatar) {
-          $photoPath = public_path($teacher->avatar);
-          if (file_exists($photoPath)) {
-            unlink($photoPath);
-          }
-        }
-        if ($teacher->cv) {
-          $cvPath = public_path($teacher->cv);
-          if (file_exists($cvPath)) {
-            unlink($cvPath);
-          }
-        }
-        $teacher->delete();
+    $teachers = User::role('teacher')->whereIn('id', $ids)->get();
+    foreach ($teachers as $teacher) {
+      if ($teacher->avatar && file_exists(public_path($teacher->avatar))) {
+        unlink(public_path($teacher->avatar));
       }
-
-      return response()->json([
-        'success' => true,
-        'message' => count($teachers) . ' teachers deleted successfully'
-      ]);
-    } catch (\Exception $e) {
-      return response()->json([
-        'success' => false,
-        'message' => 'Error deleting teachers: ' . $e->getMessage()
-      ], 500);
-    }
-  }
-
-  public function getBulkData(Request $request)
-  {
-    $ids = $request->input('ids');
-
-    if (empty($ids)) {
-      return response()->json([
-        'success' => false,
-        'message' => 'No teachers selected'
-      ], 400);
-    }
-
-    if (count($ids) > 5) {
-      return response()->json([
-        'success' => false,
-        'message' => 'You can only edit up to 5 teachers at a time'
-      ], 400);
-    }
-
-    try {
-      $teachers = User::role('teacher')->whereIn('id', $ids)->get();
-      return response()->json([
-        'success' => true,
-        'data' => $teachers
-      ]);
-    } catch (\Exception $e) {
-      return response()->json([
-        'success' => false,
-        'message' => 'Error fetching teachers: ' . $e->getMessage()
-      ], 500);
-    }
-  }
-
-  public function bulkUpdate(Request $request)
-  {
-    $request->validate([
-      'teachers' => 'required|array',
-      'teachers.*.id' => 'required|exists:users,id',
-    ]);
-
-    $updatedCount = 0;
-
-    foreach ($request->input('teachers') as $teacherData) {
-      $validator = Validator::make($teacherData, [
-        'id' => 'required|exists:users,id',
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email,' . $teacherData['id'],
-        'gender' => 'required|in:male,female',
-        'date_of_birth' => 'required|date',
-        'joining_date' => 'required|date',
-        'qualification' => 'required|string|max:255',
-        'experience' => 'nullable|string',
-        'phone' => 'nullable|string|max:20',
-        'address' => 'nullable|string',
-        'specialization' => 'nullable|string',
-        'salary' => 'nullable|numeric|min:0',
-        'blood_group' => 'nullable|string|max:10',
-        'nationality' => 'nullable|string|max:255',
-        'religion' => 'nullable|string|max:255',
-      ]);
-
-      if ($validator->fails()) {
-        Log::error("Validation failed for teacher ID {$teacherData['id']}: " . json_encode($validator->errors()));
-        continue;
+      if ($teacher->cv && file_exists(public_path($teacher->cv))) {
+        unlink(public_path($teacher->cv));
       }
-
-      try {
-        $teacher = User::findOrFail($teacherData['id']);
-        // Ensure we're only updating teachers
-        if ($teacher->hasRole('teacher')) {
-          $teacher->update($validator->validated());
-          $updatedCount++;
-        }
-      } catch (\Exception $e) {
-        Log::error("Error updating teacher: " . $e->getMessage());
-      }
+      $teacher->delete();
     }
 
-    return response()->json([
-      'success' => true,
-      'message' => "Successfully updated $updatedCount teachers",
-      'redirect' => route('admin.teachers.index')
-    ]);
+    return back()->with('success', count($teachers) . ' teachers deleted successfully');
   }
 }
