@@ -1,0 +1,53 @@
+/* Globle style dropdown-menu */
+.dropdown-menu {
+  transform-origin: top right;
+  transition: all 0.2s ease-out;
+  opacity: 0;
+  transform: scale(0.95) translateY(-10px);
+  display: block !important;
+  visibility: hidden;
+}
+
+.dropdown-menu.show {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  visibility: visible;
+}
+
+#bulkActionsBar {
+  z-index: 40;
+}
+
+#bulkActionsBar button {
+  transition: color 0.2s ease;
+}
+
+.row-checkbox {
+  cursor: pointer;
+}
+
+.animate-fade-in-out {
+  animation: fadeInOut 3s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}

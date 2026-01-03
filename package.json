@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "rl": "php artisan route:list",
+    "mi": "php artisan migrate",
+    "re": "php artisan migrate && php artisan permissions:generate && php artisan db:seed",
+    "cl": "php artisan optimize:clear",
+    "ld": "composer dump-autoload",
+    "ts": "composer test",
+    "ud": "composer update",
+    "git": "git add . && git commit -m 'add' && git push",
+    "all": "concurrently --kill-others-on-fail -n \"B,F,Q\" -c \"blue,green,magenta\" \"php artisan serve --port=8456\" \"npm run dev\" \"bash -c 'while true; do php artisan queue:work --tries=3 --sleep=1; done'\""
+  },
+  "devDependencies": {
+    "@popperjs/core": "^2.11.6",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "@tailwindcss/vite": "^4.1.10",
+    "autoprefixer": "^10.4.21",
+    "axios": "^1.8.2",
+    "bootstrap": "^5.2.3",
+    "concurrently": "^9.0.1",
+    "laravel-vite-plugin": "^1.2.0",
+    "postcss": "^8.5.5",
+    "sass": "^1.56.1",
+    "tailwindcss": "^4.1.10",
+    "vite": "^6.2.4"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@tailwindcss/postcss": "^4.1.10",
+    "cropperjs": "^1.6.2",
+    "file-saver": "^2.0.5",
+    "flowbite": "^4.0.1",
+    "remixicon": "^4.6.0"
+  }
+}

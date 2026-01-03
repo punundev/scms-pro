@@ -1,0 +1,425 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+:root {
+  --spacing: 0.25rem;
+}
+a {
+  margin-top: 0 !important;
+}
+body {
+  font-family: "Poppins", sans-serif;
+}
+
+.sidebar-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: opacity 0.3s ease;
+}
+
+.sidebar {
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item {
+  transition: all 0.3s ease;
+}
+
+aside.sidebar-collapsed .menu-item > :where(div, a) {
+  justify-content: center;
+}
+
+/* On small screens, keep the text for collapsed dropdowns */
+@media (max-width: 767.98px) {
+  aside.sidebar-collapsed .menu-item > :where(div, a) {
+    justify-content: space-between;
+  }
+}
+
+nav {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-collapsed nav {
+  overflow: visible;
+}
+
+.sidebar-collapsed nav ul .separator span {
+  display: none;
+}
+
+.sidebar-collapsed nav > ul > li > div.submenu {
+  width: 0;
+  opacity: 0;
+  visibility: hidden;
+  margin: 0;
+  padding: 0;
+  height: 0;
+  transition: all 0.3s;
+}
+
+nav ul li .submenu .submenu {
+  margin-left: 1rem;
+}
+
+nav ul > li > div.submenu {
+  margin-left: 2rem;
+}
+nav ul > li > div.submenu>ul li {
+  margin-top: 2px;
+}
+
+.sidebar-collapsed nav ul > li > div.submenu {
+  margin-left: 1rem;
+}
+
+nav .wr-icon {
+  transition: all 0.4s;
+}
+
+.sidebar-collapsed nav .wr-icon {
+  height: 3vh;
+}
+
+div.submenu {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.1s ease-in-out;
+  overflow: hidden;
+}
+
+div.submenu > ul {
+  min-height: 0;
+  transition: opacity 0.2s ease;
+  opacity: 0;
+}
+
+div.submenu.active {
+  grid-template-rows: 1fr;
+}
+
+div.submenu.active > ul {
+  opacity: 1;
+}
+
+.menu-icon {
+  transition: transform 0.3s ease;
+}
+
+.rotate-icon {
+  transform: rotate(90deg);
+}
+
+.notification-dot {
+  top: 3px;
+  right: 3px;
+}
+
+/* Dropdown positioning for collapsed sidebar */
+.collapsed-dropdown {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  width: 240px;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+  z-index: 40;
+  display: none;
+  padding: 0.5rem;
+}
+
+.collapsed-dropdown.show {
+  display: block;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+/* Tooltip for collapsed sidebar */
+.menu-tooltip {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #4338ca;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 35;
+  margin-left: 10px;
+}
+
+aside.sidebar-collapsed .menu-tooltip::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent #4338ca transparent transparent;
+}
+
+aside.sidebar-collapsed .menu-item:hover .menu-tooltip {
+  opacity: 1;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-footer-dropdown {
+  position: absolute;
+  bottom: 100%;
+  top: auto;
+  width: 100%;
+  min-width: 180px;
+  border-radius: 0px 8px 8px 0px;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+  z-index: 40;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.sidebar-footer-dropdown.show {
+  visibility: visible;
+  opacity: 1;
+  animation: slideUp 0.2s ease forwards;
+}
+
+.footer-tooltip {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #4338ca;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 50;
+  margin-left: 10px;
+}
+
+.sidebar-footer:hover .footer-tooltip {
+  opacity: 1;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-gray-300);
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: var(--color-gray-600);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-indigo-500);
+  border-radius: 10px;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-indigo-400);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-indigo-300);
+}
+
+.table-respone::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-respone::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.table-respone::-webkit-scrollbar-thumb {
+  background: #3f51b5;
+  border-radius: 10px;
+}
+
+.table-respone::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.notification-dot {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.text-hidden {
+  /* transition: opacity 0.5s, width 5s,padding 0.3s margin 0.3s visibility 0.3s; */
+  transition: all 0.3s;
+}
+
+.text-hidden.hidden {
+  display: none !important;
+}
+
+.hidden.text-hidden {
+  display: block !important;
+}
+
+.hidden.text-hidden {
+  opacity: 0;
+  visibility: hidden;
+  width: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.box {
+  opacity: 1;
+  transition: opacity 0.6s, translate 0.5s ease;
+
+  @starting-style {
+    opacity: 0;
+    translate: 0 -5px;
+  }
+}
+
+/* select fields */
+.selected {
+  font-weight: bold;
+  color: var(--color-indigo-600);
+}
+
+.open .arrow {
+  transform: rotate(180deg);
+}
+
+.open .select-options {
+  display: block;
+}
+
+.btn .textnone {
+  display: none;
+}
+
+/* SUCCESS (VALID) STYLE */
+.is-valid {
+  border-color: #198754;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23198754'%3E%3Cpath d='M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22ZM17.4571 9.45711L11 15.9142L6.79289 11.7071L8.20711 10.2929L11 13.0858L16.0429 8.04289L17.4571 9.45711Z'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25rem 1.25rem;
+}
+
+/* ERROR (INVALID) STYLE */
+.is-invalid {
+  border-color: #dc3545;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23dc3545'%3E%3Cpath d='M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM11 15V17H13V15H11ZM11 7V13H13V7H11Z'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25rem 1.25rem;
+}
+
+/* Feedback text styling */
+.valid-feedback,
+.invalid-feedback {
+  display: none;
+  font-size: 0.875em;
+  margin-top: 0.25rem;
+  text-transform: lowercase;
+}
+
+/* Show feedback based on validation state */
+.was-validated .form-control:valid ~ .valid-feedback {
+  display: block;
+  color: #198754;
+}
+
+.was-validated .form-control:invalid ~ .invalid-feedback {
+  display: block;
+  color: #dc3545;
+}
+.js-submenu-toggle {
+  margin-top: calc(var(--spacing) * 1);
+}
+.activemenu,
+.submenu.active a.active {
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  font-weight: 600;
+  border-radius: 8px;
+}
